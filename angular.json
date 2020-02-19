@@ -10,7 +10,7 @@
       "root": "",
       "sourceRoot": "src",
       "projectType": "application",
-      "prefix": "ns"
+      "prefix": "nepa"
     }
   },
   "defaultProject": "hello-world"
