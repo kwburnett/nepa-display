@@ -1,4 +1,7 @@
 @import '~@nativescript/theme/core';
+// @import '~@nativescript/theme/blue';
+
+@import './assets/scss/colors';
 
 /* Place any CSS rules you want to apply on both iOS and Android here.
 This is where the vast majority of your CSS code goes. */
@@ -36,4 +39,13 @@ button.btn-primary {
 .fab {
   font-family: 'Font Awesome 5 Brands', 'fa-brands-400';
   font-weight: 400;
+}
+
+Page {
+  background: linear-gradient(
+    to bottom right,
+    $background-top-left,
+    $background-bottom-right
+  );
+  font-family: Arial, Helvetica, sans-serif;
 }

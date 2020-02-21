@@ -1,2 +1,70 @@
 @import '../../assets/scss/colors';
 
+FlexBoxLayout {
+	flex-direction: column;
+	align-items: center;
+}
+
+.power-indicator {
+	padding-top: 100px;
+	padding-bottom: 100px;
+	width: 100%;
+	font-size: 240pt;
+	margin-top: 40px;
+	text-align: center;
+	text-shadow: 0 0 56px white;
+}
+
+.power-on {
+	color: $blue-green-400;
+
+	.title {
+		color: white;
+	}
+}
+
+.power-off {
+	color: $red-500;
+}
+
+.power-unknown {
+	color: $gray-600;
+}
+
+.data {
+	margin-top: -40px;
+	font-size: 60pt;
+}
+
+.title {
+	margin-top: -40px;
+	font-size: 50pt;
+	color: white;
+}
+
+.graph-title {
+	margin-top: 60px;
+	font-size: 60px;
+	color: white;
+}
+
+.graph {
+	width: 90%;
+}
+
+.power-on .graph-off {
+	display: none;
+}
+
+.power-off .graph-on {
+	display: none;
+}
+
+.power-on .title-off {
+	display: none;
+}
+
+.power-off .title-on {
+	display: none;
+}
+
