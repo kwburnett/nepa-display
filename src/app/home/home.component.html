@@ -1,7 +1,10 @@
-<FlexBoxLayout class="power-on">
+<FlexBoxLayout [ngClass]="{
+	'power-on': isPowerOn,
+	'power-off': !isPowerOn
+}">
 	<ShadowedLabel text="&#xf011;" class="fas power-indicator"></ShadowedLabel>
 	
-	<Label class="title title-on" text="NEPA ON FOR"></Label>
+	<Label class="title title-on" text="NEPA {{ isPowerOn ? 'ON' : 'OFF' }} FOR"></Label>
 	<Label class="data" text="1 hr"></Label>
 	<Label text="{{ (powerData$ | async) | json }}"></Label>
 </FlexBoxLayout>
