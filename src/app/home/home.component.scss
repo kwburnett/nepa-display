@@ -3,6 +3,7 @@
 FlexBoxLayout {
 	flex-direction: column;
 	align-items: center;
+	flex-grow: 0;
 }
 
 .power-indicator {
@@ -11,6 +12,7 @@ FlexBoxLayout {
 	width: 100%;
 	font-size: 240pt;
 	margin-top: 40px;
+	height: 42%;
 	text-align: center;
 	text-shadow: 0 0 56px white;
 }
@@ -34,12 +36,14 @@ FlexBoxLayout {
 .data {
 	margin-top: -40px;
 	font-size: 60pt;
+	height: 10%;
 }
 
 .title {
 	margin-top: -40px;
 	font-size: 50pt;
 	color: white;
+	height: 8%;
 }
 
 .graph-title {
@@ -68,3 +72,7 @@ FlexBoxLayout {
 	display: none;
 }
 
+RadCartesianChart {
+	height: 40%;
+	color: white;
+}

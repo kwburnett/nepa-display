@@ -1,10 +1,53 @@
-<FlexBoxLayout [ngClass]="{
-	'power-on': isPowerOn,
-	'power-off': !isPowerOn
-}">
-	<ShadowedLabel text="&#xf011;" class="fas power-indicator"></ShadowedLabel>
-	
-	<Label class="title title-on" text="NEPA {{ isPowerOn ? 'ON' : 'OFF' }} FOR"></Label>
-	<Label class="data" text="1 hr"></Label>
-	<Label text="{{ (powerData$ | async) | json }}"></Label>
+<FlexBoxLayout
+  [ngClass]="{
+    'power-on': isPowerOn$ | async,
+    'power-off': !(isPowerOn$ | async)
+  }"
+>
+  <ShadowedLabel text="&#xf011;" class="fas power-indicator"></ShadowedLabel>
+
+  <Label
+    class="title title-on"
+    [text]="'NEPA ' + ((isPowerOn$ | async) ? 'ON' : 'OFF') + ' FOR'"
+  ></Label>
+  <Label class="data" text="1 hr"></Label>
+  <RadCartesianChart>
+    <RadCartesianChartGrid
+      tkCartesianGrid
+      horizontalLinesVisible="true"
+      horizontalStrokeColor="#635D6D"
+      horizontalStrokeWidth="2"
+    >
+    </RadCartesianChartGrid>
+    <DateTimeContinuousAxis
+      tkCartesianHorizontalAxis
+      majorStep="30"
+      majorStepUnit="Minute"
+      [maximum]="xAxisMaximum$ | async"
+      [minimum]="xAxisMinimum$ | async"
+      dateFormat="h:mm"
+      labelFitMode="Rotate"
+      labelRotationAngle="-.8"
+      plotMode="OnTicks"
+    ></DateTimeContinuousAxis>
+    <LinearAxis
+      tkCartesianVerticalAxis
+      maximum="300"
+      labelFormat="%.0f V"
+    ></LinearAxis>
+    <Palette tkCartesianPalette>
+      <PaletteEntry
+        tkCartesianPaletteEntry
+        fillColor="#85635D6D"
+        strokeColor="#ffffff"
+      ></PaletteEntry>
+    </Palette>
+
+    <AreaSeries
+      tkCartesianSeries
+      [items]="powerData$ | async"
+      categoryProperty="time"
+      valueProperty="voltage"
+    ></AreaSeries>
+  </RadCartesianChart>
 </FlexBoxLayout>

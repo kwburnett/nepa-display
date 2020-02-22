@@ -23,6 +23,7 @@
     "@nativescript/theme": "^2.3.2",
     "nativescript-angular": "~8.21.0",
     "nativescript-shadowed-label": "^1.0.0",
+    "nativescript-ui-chart": "^7.1.1",
     "reflect-metadata": "~0.1.12",
     "rxjs": "^6.4.0",
     "tns-core-modules": "~6.4.0",
