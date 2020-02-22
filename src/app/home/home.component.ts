@@ -1,5 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { Page, isAndroid } from 'tns-core-modules/ui/page/page';
+import { isAndroid, Page } from 'tns-core-modules/ui/page/page';
+import { PowerService } from './power.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'nepa-home',
@@ -7,11 +9,14 @@ import { Page, isAndroid } from 'tns-core-modules/ui/page/page';
   styleUrls: ['./home.component.scss']
 })
 export class HomeComponent implements OnInit {
-  constructor(private page: Page) {
+  public powerData$: Observable<number[]>;
+  constructor(private page: Page, private powerService: PowerService) {
     if (isAndroid) {
       this.page.actionBarHidden = true;
     }
   }
 
-  ngOnInit(): void {}
+  public ngOnInit(): void {
+    this.powerData$ = this.powerService.getPowerData();
+  }
 }

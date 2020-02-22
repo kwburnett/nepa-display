@@ -3,4 +3,5 @@
 	
 	<Label class="title title-on" text="NEPA ON FOR"></Label>
 	<Label class="data" text="1 hr"></Label>
+	<Label text="{{ (powerData$ | async) | json }}"></Label>
 </FlexBoxLayout>
