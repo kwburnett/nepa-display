@@ -13,7 +13,7 @@ export interface IRecentChange {
 export class PowerService {
   private voltageData: IPowerData[] = [];
   private nextDataIndexToGet: number;
-  private minimumNumberOfMeasurementsToNotConstituteInterruption: number = 15;;
+  private minimumNumberOfMeasurementsToNotConstituteInterruption: number = 15;
 
   private tempGetPowerData(): Observable<IPowerData[]> {
     if (this.voltageData.length === 0) {
