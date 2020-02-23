@@ -138,6 +138,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         }
       )
     );
+    this._powerService.initiateDataCheck();
   }
 
   public ngOnDestroy(): void {

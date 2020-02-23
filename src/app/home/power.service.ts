@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Observable, of } from 'rxjs';
+import { BehaviorSubject, interval, Observable, of, Subscription } from 'rxjs';
+import { flatMap } from 'rxjs/operators';
 import { IPowerData } from '../../model/i-power-data';
 
 export interface IRecentChange {
@@ -14,6 +15,11 @@ export class PowerService {
   private voltageData: IPowerData[] = [];
   private nextDataIndexToGet: number;
   private minimumNumberOfMeasurementsToNotConstituteInterruption: number = 15;
+  private frequencyOfDataCheckPerMinute = 60;
+  private dataSubscription: Subscription;
+  private returnedPowerData: BehaviorSubject<
+    IPowerData[]
+  > = new BehaviorSubject([]);
 
   private tempGetPowerData(): Observable<IPowerData[]> {
     if (this.voltageData.length === 0) {
@@ -29,7 +35,7 @@ export class PowerService {
         // Start numbering the data into the future
         for (let i = nowIndex; i < numberOfDataPoints; i++) {
           this.voltageData.push({
-            time: dateNow.getTime() - (i - nowIndex) * 60000,
+            time: dateNow.getTime() + (i - nowIndex) * 60000,
             voltage: voltageData[i]
           });
         }
@@ -42,14 +48,21 @@ export class PowerService {
         }
         this.nextDataIndexToGet = nowIndex + 1;
       } catch (err) {
-        return of([]);
+        return this.returnedPowerData.asObservable();
       }
     }
-    return of(
+    this.returnedPowerData.next(
       this.voltageData.slice(
         this.nextDataIndexToGet - 4 * 60,
-        this.nextDataIndexToGet - 1
+        this.nextDataIndexToGet
       )
+    );
+    return this.returnedPowerData.asObservable();
+  }
+
+  private tempGetSubsequentPowerData(): Observable<IPowerData[]> {
+    return of(
+      this.voltageData.slice(this.nextDataIndexToGet, ++this.nextDataIndexToGet)
     );
   }
 
@@ -99,10 +112,11 @@ export class PowerService {
           )
         ) {
           numberOfInterruptions++;
-          i += voltageDataThatMayBeInterruption.findIndex(
-            (voltageDataPoint: IPowerData): boolean =>
-              voltageDataPoint.voltage === 0
-          ) + 1;
+          i +=
+            voltageDataThatMayBeInterruption.findIndex(
+              (voltageDataPoint: IPowerData): boolean =>
+                voltageDataPoint.voltage === 0
+            ) + 1;
         }
       }
     }
@@ -152,10 +166,11 @@ export class PowerService {
           )
         ) {
           numberOfInterruptions++;
-          i += voltageDataThatMayBeInterruption.findIndex(
-            (voltageDataPoint: IPowerData): boolean =>
-              voltageDataPoint.voltage > 0
-          ) + 1;
+          i +=
+            voltageDataThatMayBeInterruption.findIndex(
+              (voltageDataPoint: IPowerData): boolean =>
+                voltageDataPoint.voltage > 0
+            ) + 1;
         }
       }
     }
@@ -163,5 +178,28 @@ export class PowerService {
       powerChange: this.voltageData[indexToUse],
       numberOfInterruptions
     });
+  }
+
+  public initiateDataCheck(): void {
+    this.dataSubscription = interval(
+      (60 * 1000) / this.frequencyOfDataCheckPerMinute
+    )
+      .pipe(flatMap(() => this.fetchSubsequentData()))
+      .subscribe((latestPowerDataPoints: IPowerData[]): void => {
+        this.returnedPowerData.next([
+          ...this.returnedPowerData.getValue(),
+          ...latestPowerDataPoints
+        ]);
+      });
+  }
+
+  public cancelDataCheck(): void {
+    if (this.dataSubscription !== null) {
+      this.dataSubscription.unsubscribe();
+    }
+  }
+
+  private fetchSubsequentData(): Observable<IPowerData[]> {
+    return this.tempGetSubsequentPowerData();
   }
 }
