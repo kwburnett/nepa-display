@@ -36,7 +36,7 @@ FlexBoxLayout {
 .data {
 	margin-top: -40px;
 	font-size: 60pt;
-	height: 10%;
+	height: 9%;
 }
 
 .title {
@@ -72,7 +72,12 @@ FlexBoxLayout {
 	display: none;
 }
 
+.interruptions {
+	font-size: 20pt;
+	color: white;
+}
+
 RadCartesianChart {
-	height: 40%;
+	height: 39%;
 	color: white;
 }

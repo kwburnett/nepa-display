@@ -2,12 +2,18 @@ import { Injectable } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { IPowerData } from '../../model/i-power-data';
 
+export interface IRecentChange {
+  powerChange: IPowerData;
+  numberOfInterruptions: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class PowerService {
   private voltageData: IPowerData[] = [];
   private nextDataIndexToGet: number;
+  private minimumNumberOfMeasurementsToNotConstituteInterruption: number = 15;;
 
   private tempGetPowerData(): Observable<IPowerData[]> {
     if (this.voltageData.length === 0) {
@@ -51,5 +57,111 @@ export class PowerService {
 
   public getPowerData(): Observable<IPowerData[]> {
     return this.tempGetPowerData();
+  }
+
+  public getMostRecentPowerOutage(): Observable<IRecentChange> {
+    let indexToUse = -1;
+    let numberOfInterruptions = 0;
+    for (let i = 1; i < this.nextDataIndexToGet; i++) {
+      if (
+        this.voltageData[i - 1].voltage !== 0 &&
+        this.voltageData[i].voltage === 0
+      ) {
+        const voltageDataThatMayBeInterruption = this.voltageData.slice(
+          i,
+          i + this.minimumNumberOfMeasurementsToNotConstituteInterruption
+        );
+        // If all of the next N are 0, this is an outage
+        if (
+          voltageDataThatMayBeInterruption.every(
+            (voltageDataPoint: IPowerData): boolean =>
+              voltageDataPoint.voltage === 0
+          )
+        ) {
+          numberOfInterruptions = 0;
+          indexToUse = i;
+          i += this.minimumNumberOfMeasurementsToNotConstituteInterruption;
+        }
+      } else if (
+        this.voltageData[i - 1].voltage === 0 &&
+        this.voltageData[i].voltage !== 0 &&
+        indexToUse > -1
+      ) {
+        const voltageDataThatMayBeInterruption = this.voltageData.slice(
+          i,
+          i + this.minimumNumberOfMeasurementsToNotConstituteInterruption
+        );
+        // If any of the next N are 0, this is an interruption
+        if (
+          voltageDataThatMayBeInterruption.some(
+            (voltageDataPoint: IPowerData): boolean =>
+              voltageDataPoint.voltage === 0
+          )
+        ) {
+          numberOfInterruptions++;
+          i += voltageDataThatMayBeInterruption.findIndex(
+            (voltageDataPoint: IPowerData): boolean =>
+              voltageDataPoint.voltage === 0
+          ) + 1;
+        }
+      }
+    }
+    return of({
+      powerChange: this.voltageData[indexToUse],
+      numberOfInterruptions
+    });
+  }
+
+  public getMostRecentPowerRestoration(): Observable<IRecentChange> {
+    let indexToUse = -1;
+    let numberOfInterruptions = 0;
+    for (let i = 1; i < this.nextDataIndexToGet; i++) {
+      if (
+        this.voltageData[i - 1].voltage === 0 &&
+        this.voltageData[i].voltage !== 0
+      ) {
+        const voltageDataThatMayBeInterruption = this.voltageData.slice(
+          i,
+          i + this.minimumNumberOfMeasurementsToNotConstituteInterruption
+        );
+        // If all of the next N are not 0, this is a restoration
+        if (
+          voltageDataThatMayBeInterruption.every(
+            (voltageDataPoint: IPowerData): boolean =>
+              voltageDataPoint.voltage > 0
+          )
+        ) {
+          numberOfInterruptions = 0;
+          indexToUse = i;
+          i += this.minimumNumberOfMeasurementsToNotConstituteInterruption;
+        }
+      } else if (
+        this.voltageData[i - 1].voltage !== 0 &&
+        this.voltageData[i].voltage === 0 &&
+        indexToUse > -1
+      ) {
+        const voltageDataThatMayBeInterruption = this.voltageData.slice(
+          i,
+          i + this.minimumNumberOfMeasurementsToNotConstituteInterruption
+        );
+        // If any of the next N are not 0, this is an interruption
+        if (
+          voltageDataThatMayBeInterruption.some(
+            (voltageDataPoint: IPowerData): boolean =>
+              voltageDataPoint.voltage > 0
+          )
+        ) {
+          numberOfInterruptions++;
+          i += voltageDataThatMayBeInterruption.findIndex(
+            (voltageDataPoint: IPowerData): boolean =>
+              voltageDataPoint.voltage > 0
+          ) + 1;
+        }
+      }
+    }
+    return of({
+      powerChange: this.voltageData[indexToUse],
+      numberOfInterruptions
+    });
   }
 }

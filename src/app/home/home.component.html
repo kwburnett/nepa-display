@@ -10,7 +10,8 @@
     class="title title-on"
     [text]="'NEPA ' + ((isPowerOn$ | async) ? 'ON' : 'OFF') + ' FOR'"
   ></Label>
-  <Label class="data" text="1 hr"></Label>
+  <Label class="data" text="{{ timeText$ | async }}"></Label>
+  <Label class="interruptions" text="{{ interruptionsText$ | async }}"></Label>
   <RadCartesianChart>
     <RadCartesianChartGrid
       tkCartesianGrid
