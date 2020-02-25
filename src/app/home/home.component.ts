@@ -1,9 +1,12 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { combineLatest, Observable, of, Subscription } from 'rxjs';
+import { TrackballCustomContentData } from 'nativescript-ui-chart';
+import { combineLatest, Observable, Subscription } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { isAndroid, Page } from 'tns-core-modules/ui/page/page';
 import { IPowerData } from '../../model/i-power-data';
-import { IRecentChange, PowerService } from './power.service';
+import { IRecentSwitch } from '../../model/i-recent-switch';
+import { isPowerOff, isPowerOn } from '../utils';
+import { PowerService } from './power.service';
 
 @Component({
   selector: 'nepa-home',
@@ -21,7 +24,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   public interruptionsText$: Observable<string>;
 
   private subscriptions: Subscription[] = [];
-  private changeTracker$: Observable<[IPowerData[], IRecentChange]>;
+  private changeTracker$: Observable<[IPowerData[], IRecentSwitch]>;
+  private powerSwitches: IPowerData[] = [];
 
   constructor(private page: Page, private _powerService: PowerService) {
     if (isAndroid) {
@@ -31,9 +35,20 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   public ngOnInit(): void {
     this.powerData$ = this._powerService.getPowerData();
+    this.powerData$
+      .subscribe((powerData: IPowerData[]): void => {
+        this.subscriptions.push(
+          this._powerService
+            .getPowerSwitches(powerData[0].time)
+            .subscribe((powerSwitchData: IPowerData[]): void => {
+              this.powerSwitches = powerSwitchData;
+            })
+        );
+      })
+      .unsubscribe();
     this.isPowerOn$ = this.powerData$.pipe(
       map((powerData: IPowerData[]): boolean => {
-        return powerData[powerData.length - 1].voltage !== 0;
+        return isPowerOn(powerData[powerData.length - 1]);
       })
     );
     this.yAxisMaximum$ = this.powerData$.pipe(
@@ -52,10 +67,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         return Math.round(
           Math.min(
             ...powerData
-              .filter(
-                (powerDataPoint: IPowerData): boolean =>
-                  powerDataPoint.voltage > 0
-              )
+              .filter(isPowerOn)
               .map(
                 (powerDataPoint: IPowerData): number => powerDataPoint.voltage
               )
@@ -82,7 +94,7 @@ export class HomeComponent implements OnInit, OnDestroy {
             hoursToUse,
             minutesToUse
           );
-          console.log(timeToUse);
+          // console.log(timeToUse);
           return timeToUse;
         }
       )
@@ -92,7 +104,7 @@ export class HomeComponent implements OnInit, OnDestroy {
         (maxTime: Date): Date => {
           const minTime = new Date(maxTime);
           minTime.setHours(minTime.getHours() - 4);
-          console.log(minTime);
+          // console.log(minTime);
           return minTime;
         }
       )
@@ -101,8 +113,8 @@ export class HomeComponent implements OnInit, OnDestroy {
       this.powerData$,
       this.isPowerOn$.pipe(
         switchMap(
-          (isPowerOn: boolean): Observable<IRecentChange> => {
-            return isPowerOn
+          (isPowerCurrentlyOn: boolean): Observable<IRecentSwitch> => {
+            return isPowerCurrentlyOn
               ? this._powerService.getMostRecentPowerRestoration()
               : this._powerService.getMostRecentPowerOutage();
           }
@@ -113,7 +125,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       map(
         ([powerData, mostRecentChange]: [
           IPowerData[],
-          IRecentChange
+          IRecentSwitch
         ]): string => {
           return this.getTimeIntervalDisplay(
             mostRecentChange.powerChange.time,
@@ -126,7 +138,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       map(
         ([powerData, mostRecentChange]: [
           IPowerData[],
-          IRecentChange
+          IRecentSwitch
         ]): string => {
           return `with ${
             mostRecentChange.numberOfInterruptions > 0
@@ -145,6 +157,40 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.subscriptions.forEach((subscription: Subscription): void => {
       subscription.unsubscribe();
     });
+  }
+
+  public onTrackBallContentRequested(event: TrackballCustomContentData): void {
+    const selectedDataPoint = <IPowerData>event.pointData;
+    event.content = `Power ${
+      isPowerOff(selectedDataPoint) ? 'out' : 'on'
+    } from:\r\n`;
+    if (this.powerSwitches.length === 0) {
+      event.content += 'No data found';
+    } else {
+      const indexOfChangePastSelectedDataPoint = this.powerSwitches.findIndex(
+        (powerSwitch: IPowerData): boolean =>
+          powerSwitch.time >= selectedDataPoint.time
+      );
+      let timeEnd = this.powerSwitches[this.powerSwitches.length - 1].time,
+        timeStart = -1;
+      if (indexOfChangePastSelectedDataPoint > -1) {
+        timeEnd = this.powerSwitches[indexOfChangePastSelectedDataPoint - 1]
+          .time;
+        timeStart = this.powerSwitches[indexOfChangePastSelectedDataPoint].time;
+      }
+      event.content += `${this.formatTime(timeEnd)} - ${
+        timeStart > -1 ? this.formatTime(timeStart) : 'now'
+      }`;
+    }
+  }
+
+  private formatTime(timeToFormat: number): string {
+    const dateToUse = new Date(timeToFormat);
+    return `${
+      dateToUse.getHours() > 12
+        ? dateToUse.getHours() - 12
+        : dateToUse.getHours()
+    }:${dateToUse.getMinutes() < 10 ? '0' : ''}${dateToUse.getMinutes()}`;
   }
 
   private getTimeIntervalDisplay(timeStart: number, timeEnd: number): string {

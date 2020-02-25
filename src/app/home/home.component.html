@@ -44,6 +44,14 @@
       ></PaletteEntry>
     </Palette>
 
+    <Trackball
+      tkCartesianTrackball
+      snapMode="AllClosestPoints"
+      showIntersectionPoints="false"
+      (trackBallContentRequested)="onTrackBallContentRequested($event)"
+    >
+    </Trackball>
+
     <AreaSeries
       tkCartesianSeries
       [items]="powerData$ | async"
