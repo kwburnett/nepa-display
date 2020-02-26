@@ -1,6 +1,6 @@
 import { Component, HostListener } from '@angular/core';
 import { TrackballCustomContentData } from 'nativescript-ui-chart';
-import { combineLatest, Observable, Subscription } from 'rxjs';
+import { combineLatest, Observable, of, Subscription } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { isAndroid, Page } from 'tns-core-modules/ui/page/page';
 import { IPowerData } from '../../model/i-power-data';
@@ -19,8 +19,8 @@ export class HomeComponent {
   public isPowerOn$: Observable<boolean>;
   public yAxisMinimum$: Observable<number>;
   public yAxisMaximum$: Observable<number>;
-  public xAxisMinimum$: Observable<Date>;
-  public xAxisMaximum$: Observable<Date>;
+  public xAxisMinimum$: Observable<Date> = of(new Date());
+  public xAxisMaximum$: Observable<Date> = of(new Date());
   public timeText$: Observable<string>;
   public interruptionsText$: Observable<string>;
 
