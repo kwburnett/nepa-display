@@ -1,10 +1,11 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener } from '@angular/core';
 import { TrackballCustomContentData } from 'nativescript-ui-chart';
 import { combineLatest, Observable, Subscription } from 'rxjs';
 import { map, switchMap } from 'rxjs/operators';
 import { isAndroid, Page } from 'tns-core-modules/ui/page/page';
 import { IPowerData } from '../../model/i-power-data';
 import { IRecentSwitch } from '../../model/i-recent-switch';
+import { LifeCycleHooks } from '../life-cycle-hooks';
 import { isPowerOff, isPowerOn } from '../utils';
 import { PowerService } from './power.service';
 
@@ -13,7 +14,7 @@ import { PowerService } from './power.service';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss']
 })
-export class HomeComponent implements OnInit, OnDestroy {
+export class HomeComponent {
   public powerData$: Observable<IPowerData[]>;
   public isPowerOn$: Observable<boolean>;
   public yAxisMinimum$: Observable<number>;
@@ -31,9 +32,27 @@ export class HomeComponent implements OnInit, OnDestroy {
     if (isAndroid) {
       this.page.actionBarHidden = true;
     }
+
+    LifeCycleHooks.addOnPauseCallback(() => {
+      this._powerService.cancelDataCheck();
+    });
+    LifeCycleHooks.addOnResumeCallback(() => {
+      this._powerService.initiateDataCheck();
+    });
   }
 
-  public ngOnInit(): void {
+  @HostListener('loaded')
+  public pageOnInit() {
+    this.initObservables();
+  }
+  @HostListener('unloaded')
+  public pageDestroy() {
+    this.subscriptions.forEach((subscription: Subscription): void => {
+      subscription.unsubscribe();
+    });
+  }
+
+  private initObservables(): void {
     this.powerData$ = this._powerService.getPowerData();
     this.powerData$
       .subscribe((powerData: IPowerData[]): void => {
@@ -151,12 +170,6 @@ export class HomeComponent implements OnInit, OnDestroy {
       )
     );
     this._powerService.initiateDataCheck();
-  }
-
-  public ngOnDestroy(): void {
-    this.subscriptions.forEach((subscription: Subscription): void => {
-      subscription.unsubscribe();
-    });
   }
 
   public onTrackBallContentRequested(event: TrackballCustomContentData): void {

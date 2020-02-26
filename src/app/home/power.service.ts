@@ -1,5 +1,12 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, interval, Observable, of, Subscription } from 'rxjs';
+import {
+  BehaviorSubject,
+  combineLatest,
+  interval,
+  Observable,
+  of,
+  Subscription
+} from 'rxjs';
 import { flatMap, map } from 'rxjs/operators';
 import { IPowerData } from '../../model/i-power-data';
 import { IRecentSwitch } from '../../model/i-recent-switch';
@@ -13,7 +20,7 @@ export class PowerService {
   private voltageSwitches: IPowerData[] = [];
   private nextDataIndexToGet: number;
   private minimumNumberOfMinutesToNotConstituteInterruption: number = 15;
-  private frequencyOfDataCheckPerMinute = 15;
+  private frequencyOfDataCheckPerMinute = 60;
   private dataSubscription: Subscription;
   private returnedPowerData: BehaviorSubject<
     IPowerData[]
@@ -91,24 +98,32 @@ export class PowerService {
   private tempGetPowerSwitches(
     timeOfLatestDataPointDisplayed: number
   ): Observable<IPowerData[]> {
-    return this.returnedPowerSwitches.asObservable().pipe(
-      map((powerDataSwitches: IPowerData[]): IPowerData[] => {
-        const indexOfChangePastLatest: number = powerDataSwitches.findIndex(
-          (powerDataSwitchDataPoint: IPowerData): boolean =>
-            powerDataSwitchDataPoint.time > timeOfLatestDataPointDisplayed
-				);
-        const timeOfMostRecentDataPointDisplayed = this.voltageData[
-          this.nextDataIndexToGet - 1
-        ].time;
-        const indexOfChangePastRecent: number = powerDataSwitches.findIndex(
-          (powerDataSwitchDataPoint: IPowerData): boolean =>
-            powerDataSwitchDataPoint.time > timeOfMostRecentDataPointDisplayed
-				);
-        return powerDataSwitches.slice(
-          indexOfChangePastLatest - 1,
-          indexOfChangePastRecent
-        );
-      })
+    return combineLatest(
+      this.returnedPowerData.asObservable(),
+      this.returnedPowerSwitches.asObservable()
+    ).pipe(
+      map(
+        ([powerData, powerDataSwitches]: [
+          IPowerData[],
+          IPowerData[]
+        ]): IPowerData[] => {
+          const indexOfChangePastLatest: number = powerDataSwitches.findIndex(
+            (powerDataSwitchDataPoint: IPowerData): boolean =>
+              powerDataSwitchDataPoint.time > timeOfLatestDataPointDisplayed
+          );
+          const timeOfMostRecentDataPointDisplayed = this.voltageData[
+            this.nextDataIndexToGet - 1
+          ].time;
+          const indexOfChangePastRecent: number = powerDataSwitches.findIndex(
+            (powerDataSwitchDataPoint: IPowerData): boolean =>
+              powerDataSwitchDataPoint.time > timeOfMostRecentDataPointDisplayed
+          );
+          return powerDataSwitches.slice(
+            indexOfChangePastLatest - 1,
+            indexOfChangePastRecent
+          );
+        }
+      )
     );
   }
 
@@ -190,6 +205,9 @@ export class PowerService {
   }
 
   public initiateDataCheck(): void {
+    if (this.dataSubscription) {
+      return;
+    }
     this.dataSubscription = interval(
       (60 * 1000) / this.frequencyOfDataCheckPerMinute
     )
@@ -203,8 +221,9 @@ export class PowerService {
   }
 
   public cancelDataCheck(): void {
-    if (this.dataSubscription !== null) {
+    if (this.dataSubscription) {
       this.dataSubscription.unsubscribe();
+      this.dataSubscription = null;
     }
   }
 

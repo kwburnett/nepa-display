@@ -2,9 +2,23 @@
 import { registerElement } from 'nativescript-angular/element-registry';
 import { platformNativeScriptDynamic } from 'nativescript-angular/platform';
 import { ShadowedLabel } from 'nativescript-shadowed-label';
+import {
+  ApplicationEventData,
+  on as applicationOn,
+  resumeEvent,
+  suspendEvent
+} from 'tns-core-modules/application';
 import { AppModule } from './app/app.module';
+import { LifeCycleHooks } from './app/life-cycle-hooks';
 
 registerElement('ShadowedLabel', () => ShadowedLabel);
+
+applicationOn(suspendEvent, (event: ApplicationEventData): void => {
+  LifeCycleHooks.onPause(event);
+});
+applicationOn(resumeEvent, (event: ApplicationEventData): void => {
+  LifeCycleHooks.onResume(event);
+});
 
 // A traditional NativeScript application starts by initializing global objects,
 // setting up global CSS rules, creating, and navigating to the main page.
