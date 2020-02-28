@@ -7,3 +7,7 @@ export function isPowerOn(powerData: IPowerData): boolean {
 export function isPowerOff(powerData: IPowerData): boolean {
   return !isPowerOn(powerData);
 }
+
+export function isNullOrUndefined(object: any): boolean {
+	return object === null || object === undefined;
+}

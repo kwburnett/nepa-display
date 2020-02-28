@@ -4,15 +4,16 @@ FlexBoxLayout {
 	flex-direction: column;
 	align-items: center;
 	flex-grow: 0;
+	--height-factor: 1;
 }
 
 .power-indicator {
 	padding-top: 100px;
 	padding-bottom: 100px;
 	width: 100%;
-	font-size: 240pt;
+	font-size: calc(240vh);
 	margin-top: 40px;
-	height: 42%;
+	height: 40%;
 	text-align: center;
 	text-shadow: 0 0 56px white;
 }
@@ -30,25 +31,26 @@ FlexBoxLayout {
 }
 
 .power-unknown {
-	color: $gray-600;
+	// color: $gray-600;
+	color: $yellow-400;
 }
 
 .data {
 	margin-top: -40px;
-	font-size: 60pt;
+	font-size: calc(60vh);
 	height: 9%;
 }
 
 .title {
 	margin-top: -40px;
-	font-size: 50pt;
+	font-size: calc(50vh);
 	color: white;
 	height: 8%;
 }
 
 .graph-title {
 	margin-top: 60px;
-	font-size: 60px;
+	font-size: 60vh;
 	color: white;
 }
 
@@ -56,28 +58,12 @@ FlexBoxLayout {
 	width: 90%;
 }
 
-.power-on .graph-off {
-	display: none;
-}
-
-.power-off .graph-on {
-	display: none;
-}
-
-.power-on .title-off {
-	display: none;
-}
-
-.power-off .title-on {
-	display: none;
-}
-
 .interruptions {
-	font-size: 20pt;
+	font-size: calc(20vh);
 	color: white;
 }
 
 RadCartesianChart {
-	height: 39%;
+	height: 41%;
 	color: white;
 }

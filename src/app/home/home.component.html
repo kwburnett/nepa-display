@@ -1,17 +1,29 @@
 <FlexBoxLayout
   [ngClass]="{
     'power-on': isPowerOn$ | async,
-    'power-off': !(isPowerOn$ | async)
+    'power-off': !(isPowerOn$ | async),
+    'power-unknown': isDataMissing$ | async
   }"
+  id="homeScreen"
 >
-  <ShadowedLabel text="&#xf011;" class="fas power-indicator"></ShadowedLabel>
+  <ShadowedLabel
+    text="{{ (isDataMissing$ | async) ? '&#Xf071;' : '&#xf011;' }}"
+    class="fas power-indicator"
+  ></ShadowedLabel>
 
   <Label
     class="title title-on"
-    [text]="'NEPA ' + ((isPowerOn$ | async) ? 'ON' : 'OFF') + ' FOR'"
+    [text]="
+      ((isDataMissing$ | async)
+        ? 'NO DATA'
+        : 'NEPA ' + ((isPowerOn$ | async) ? 'ON' : 'OFF')) + ' FOR'
+    "
   ></Label>
-  <Label class="data" text="{{ timeText$ | async }}"></Label>
-  <Label class="interruptions" text="{{ interruptionsText$ | async }}"></Label>
+  <Label class="data" [text]="timeText$ | async"></Label>
+  <Label
+		class="interruptions"
+    [text]="(isDataMissing$ | async) ? '' : interruptionsText$ | async"
+  ></Label>
   <RadCartesianChart>
     <RadCartesianChartGrid
       tkCartesianGrid
@@ -30,6 +42,7 @@
       labelFitMode="Rotate"
       labelRotationAngle="-.8"
       plotMode="OnTicks"
+      id="timeAxis"
     ></DateTimeContinuousAxis>
     <LinearAxis
       tkCartesianVerticalAxis
@@ -43,6 +56,18 @@
         strokeColor="#ffffff"
       ></PaletteEntry>
     </Palette>
+
+    <ChartPlotBandAnnotation
+      tkCartesianAnnotations
+      axisId="timeAxis"
+      [hidden]="(isDataMissing$ | async) ? 'false' : 'true'"
+      zPosition="BelowSeries"
+      [maxValue]="timeOfMostRecentMeasurement$ | async"
+      [minValue]="timeWhenDataStartedMissing$ | async"
+      fillColor="#cacc3f"
+      strokeColor="#cacc3f"
+    >
+    </ChartPlotBandAnnotation>
 
     <Trackball
       tkCartesianTrackball
