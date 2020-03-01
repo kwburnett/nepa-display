@@ -1,7 +1,8 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostBinding, HostListener } from '@angular/core';
 import { TrackballCustomContentData } from 'nativescript-ui-chart';
 import { BehaviorSubject, combineLatest, Observable, of, Subscription } from 'rxjs';
-import { distinctUntilChanged, map, switchMap, tap, withLatestFrom } from 'rxjs/operators';
+import { distinctUntilChanged, map, switchMap, withLatestFrom } from 'rxjs/operators';
+import { screen } from 'tns-core-modules/platform';
 import { isAndroid, Page } from 'tns-core-modules/ui/page/page';
 import { IPowerData } from '../../model/i-power-data';
 import { IRecentSwitch } from '../../model/i-recent-switch';
@@ -9,8 +10,13 @@ import { LifeCycleHooks } from '../life-cycle-hooks';
 import { isNullOrUndefined, isPowerOff, isPowerOn } from '../utils';
 import { PowerService } from './power.service';
 
-const initialTimeWhenDataStartedMissing: number = new Date().setHours(new Date().getHours() - 1);
-const initialTimeWhenDataMissingEnds: number = new Date().setDate(new Date().getDate() + 1);
+function getInitialTimeWhenDataStartedMissing(): number {
+  return new Date().setHours(new Date().getHours() - 1);
+}
+function getInitialTimeWhenDataMissingEnds(): number {
+  return new Date().setDate(new Date().getDate() + 1);
+}
+
 const timeDelayInMillisBecauseOtherwiseChartBandComplainsAboutBeingTheSameAsNow: number = 60000;
 
 @Component({
@@ -30,22 +36,20 @@ export class HomeComponent {
   public interruptionsText$: Observable<string>;
   public canGetNewData$: Observable<boolean> = of(true);
 
+  @HostBinding('class') public screenSizeClass: string = '';
+
   public isDataMissing$: Observable<boolean> = of(false);
   private _shouldShowDataMissingBand$: BehaviorSubject<boolean> = new BehaviorSubject(false);
   public shouldShowDataMissingBand$: Observable<boolean> = this._shouldShowDataMissingBand$
     .asObservable()
     .pipe(distinctUntilChanged());
   private _timeWhenDataStartedMissing$: BehaviorSubject<number> = new BehaviorSubject(
-    initialTimeWhenDataStartedMissing,
+    getInitialTimeWhenDataStartedMissing(),
   );
-  public timeWhenDataStartedMissing$: Observable<number> = this._timeWhenDataStartedMissing$.asObservable().pipe(
-    map(
-      (timeWhenDataStartedMissing: number): number =>
-        timeWhenDataStartedMissing - timeDelayInMillisBecauseOtherwiseChartBandComplainsAboutBeingTheSameAsNow,
-    ),
-    distinctUntilChanged(),
-  );
-  private _timeWhenDataMissingEnd$: BehaviorSubject<number> = new BehaviorSubject(initialTimeWhenDataMissingEnds);
+  public timeWhenDataStartedMissing$: Observable<number> = this._timeWhenDataStartedMissing$
+    .asObservable()
+    .pipe(distinctUntilChanged());
+  private _timeWhenDataMissingEnd$: BehaviorSubject<number> = new BehaviorSubject(getInitialTimeWhenDataMissingEnds());
   public timeOfMostRecentMeasurement$: Observable<number> = this._timeWhenDataMissingEnd$
     .asObservable()
     .pipe(distinctUntilChanged());
@@ -54,9 +58,9 @@ export class HomeComponent {
   private _changeTracker$: Observable<[IPowerData[], IRecentSwitch]>;
   private _powerSwitches: IPowerData[] = [];
 
-  constructor(private page: Page, private _powerService: PowerService) {
+  constructor(private _page: Page, private _powerService: PowerService) {
     if (isAndroid) {
-      this.page.actionBarHidden = true;
+      this._page.actionBarHidden = true;
     }
 
     LifeCycleHooks.addOnPauseCallback(() => {
@@ -70,12 +74,18 @@ export class HomeComponent {
   @HostListener('loaded')
   public pageOnInit() {
     this.initObservables();
+    this.addScreenCss();
   }
   @HostListener('unloaded')
   public pageDestroy() {
     this._subscriptions.forEach((subscription: Subscription): void => {
       subscription.unsubscribe();
     });
+    this._resetNoDataIntervals();
+  }
+
+  private addScreenCss(): void {
+    this.screenSizeClass = `dip-${Math.floor(screen.mainScreen.heightDIPs)}`;
   }
 
   private initObservables(): void {
@@ -102,20 +112,16 @@ export class HomeComponent {
             const timeWhenDataStartedMissing = powerData.find((powerDataPoint: IPowerData): boolean =>
               isNullOrUndefined(powerDataPoint.voltage),
             ).time;
-            this._timeWhenDataStartedMissing$.next(timeWhenDataStartedMissing);
-            this._timeWhenDataMissingEnd$.next(mostRecentTime);
             if (
-              timeWhenDataStartedMissing + timeDelayInMillisBecauseOtherwiseChartBandComplainsAboutBeingTheSameAsNow <
-              mostRecentTime
+              mostRecentTime - timeWhenDataStartedMissing >
+              timeDelayInMillisBecauseOtherwiseChartBandComplainsAboutBeingTheSameAsNow
             ) {
               this._shouldShowDataMissingBand$.next(true);
               this._timeWhenDataStartedMissing$.next(timeWhenDataStartedMissing);
               this._timeWhenDataMissingEnd$.next(mostRecentTime);
             }
           } else {
-            this._shouldShowDataMissingBand$.next(false);
-            this._timeWhenDataMissingEnd$.next(initialTimeWhenDataMissingEnds);
-            this._timeWhenDataStartedMissing$.next(initialTimeWhenDataStartedMissing);
+            this._resetNoDataIntervals();
           }
         }),
     );
@@ -190,12 +196,12 @@ export class HomeComponent {
       withLatestFrom(this.isDataMissing$),
       map(([[powerData, mostRecentChange], isDataMissing]: [[IPowerData[], IRecentSwitch], boolean]): string => {
         if (isDataMissing) {
-          return this.getTimeIntervalDisplay(
+          return this._getTimeIntervalDisplay(
             this._timeWhenDataStartedMissing$.getValue(),
             powerData[powerData.length - 1].time,
           );
         }
-        return this.getTimeIntervalDisplay(mostRecentChange.powerChange.time, powerData[powerData.length - 1].time);
+        return this._getTimeIntervalDisplay(mostRecentChange.powerChange.time, powerData[powerData.length - 1].time);
       }),
     );
     this.interruptionsText$ = this._changeTracker$.pipe(
@@ -223,18 +229,18 @@ export class HomeComponent {
         timeEnd = this._powerSwitches[indexOfChangePastSelectedDataPoint - 1].time;
         timeStart = this._powerSwitches[indexOfChangePastSelectedDataPoint].time;
       }
-      event.content += `${this.formatTime(timeEnd)} - ${timeStart > -1 ? this.formatTime(timeStart) : 'now'}`;
+      event.content += `${this._formatTime(timeEnd)} - ${timeStart > -1 ? this._formatTime(timeStart) : 'now'}`;
     }
   }
 
-  private formatTime(timeToFormat: number): string {
+  private _formatTime(timeToFormat: number): string {
     const dateToUse = new Date(timeToFormat);
     return `${dateToUse.getHours() > 12 ? dateToUse.getHours() - 12 : dateToUse.getHours()}:${
       dateToUse.getMinutes() < 10 ? '0' : ''
     }${dateToUse.getMinutes()}`;
   }
 
-  private getTimeIntervalDisplay(timeStart: number, timeEnd: number): string {
+  private _getTimeIntervalDisplay(timeStart: number, timeEnd: number): string {
     const timeDifferenceInMinutes = (timeEnd - timeStart) / 1000 / 60;
     if (timeDifferenceInMinutes < 5) {
       return '< 5 mins';
@@ -256,5 +262,11 @@ export class HomeComponent {
       const hourValue = Math.floor((timeDifferenceInMinutes - dayValue * 1440) / 60);
       return `${dayValue} day${dayValue > 1 ? 's' : ''} ${hourValue} hr${hourValue > 1 ? 's' : ''}`;
     }
+  }
+
+  private _resetNoDataIntervals(): void {
+    this._shouldShowDataMissingBand$.next(false);
+    this._timeWhenDataMissingEnd$.next(getInitialTimeWhenDataMissingEnds());
+    this._timeWhenDataStartedMissing$.next(getInitialTimeWhenDataStartedMissing());
   }
 }
