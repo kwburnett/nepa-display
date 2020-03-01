@@ -1,69 +1,73 @@
 @import '../../assets/scss/colors';
+@import '../../assets/scss/screenSizes';
+
+:host {
+	--screen-adjustment-ratio: 1;
+}
 
 FlexBoxLayout {
-	flex-direction: column;
-	align-items: center;
-	flex-grow: 0;
-	--height-factor: 1;
+  flex-direction: column;
+  align-items: center;
+  flex-grow: 0;
 }
 
 .power-indicator {
-	padding-top: 100px;
-	padding-bottom: 100px;
-	width: 100%;
-	font-size: calc(240vh);
-	margin-top: 40px;
-	height: 40%;
-	text-align: center;
-	text-shadow: 0 0 56px white;
+  padding-top: 100px;
+  padding-bottom: 100px;
+  width: 100%;
+  font-size: calc(240pt * var(--screen-adjustment-ratio));
+  margin-top: 40px;
+  height: 41%;
+  text-align: center;
+  text-shadow: 0 0 56px white;
 }
 
 .power-on {
-	color: $blue-green-400;
+  color: $blue-green-400;
 
-	.title {
-		color: white;
-	}
+  .title {
+    color: white;
+  }
 }
 
 .power-off {
-	color: $red-500;
+  color: $red-500;
 }
 
 .power-unknown {
-	// color: $gray-600;
-	color: $yellow-400;
+  // color: $gray-600;
+  color: $yellow-400;
 }
 
 .data {
-	margin-top: -40px;
-	font-size: calc(60vh);
-	height: 9%;
+  margin-top: -40px;
+  font-size: calc(56pt * var(--screen-adjustment-ratio));
+  height: 9%;
 }
 
 .title {
-	margin-top: -40px;
-	font-size: calc(50vh);
-	color: white;
-	height: 8%;
+  margin-top: -40px;
+  font-size: calc(48pt * var(--screen-adjustment-ratio));
+  color: white;
+  height: 8%;
 }
 
 .graph-title {
-	margin-top: 60px;
-	font-size: 60vh;
-	color: white;
+  margin-top: 60px;
+  font-size: calc(60pt * var(--screen-adjustment-ratio));
+  color: white;
 }
 
 .graph {
-	width: 90%;
+  width: 90%;
 }
 
 .interruptions {
-	font-size: calc(20vh);
-	color: white;
+  font-size: calc(20pt * var(--screen-adjustment-ratio));
+  color: white;
 }
 
 RadCartesianChart {
-	height: 41%;
-	color: white;
+  height: 40%;
+  color: white;
 }

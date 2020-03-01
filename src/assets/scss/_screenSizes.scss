@@ -1,0 +1,259 @@
+$default-screen-size: 800;
+:host(.dip-300) {
+  --screen-adjustment-ratio: calc(300 / #{$default-screen-size});
+}
+:host(.dip-320) {
+  --screen-adjustment-ratio: calc(320 / #{$default-screen-size});
+}
+:host(.dip-340) {
+  --screen-adjustment-ratio: calc(340 / #{$default-screen-size});
+}
+:host(.dip-360) {
+  --screen-adjustment-ratio: calc(360 / #{$default-screen-size});
+}
+:host(.dip-380) {
+  --screen-adjustment-ratio: calc(380 / #{$default-screen-size});
+}
+:host(.dip-400) {
+  --screen-adjustment-ratio: calc(400 / #{$default-screen-size});
+}
+:host(.dip-420) {
+  --screen-adjustment-ratio: calc(420 / #{$default-screen-size});
+}
+:host(.dip-440) {
+  --screen-adjustment-ratio: calc(440 / #{$default-screen-size});
+}
+:host(.dip-460) {
+  --screen-adjustment-ratio: calc(460 / #{$default-screen-size});
+}
+:host(.dip-480) {
+  --screen-adjustment-ratio: calc(480 / #{$default-screen-size});
+}
+:host(.dip-500) {
+  --screen-adjustment-ratio: calc(500 / #{$default-screen-size});
+}
+:host(.dip-520) {
+  --screen-adjustment-ratio: calc(520 / #{$default-screen-size});
+}
+:host(.dip-540) {
+  --screen-adjustment-ratio: calc(540 / #{$default-screen-size});
+}
+:host(.dip-560) {
+  --screen-adjustment-ratio: calc(560 / #{$default-screen-size});
+}
+:host(.dip-580) {
+  --screen-adjustment-ratio: calc(580 / #{$default-screen-size});
+}
+:host(.dip-600) {
+  --screen-adjustment-ratio: calc(600 / #{$default-screen-size});
+}
+:host(.dip-620) {
+  --screen-adjustment-ratio: calc(620 / #{$default-screen-size});
+}
+:host(.dip-640) {
+  --screen-adjustment-ratio: calc(640 / #{$default-screen-size});
+}
+:host(.dip-660) {
+  --screen-adjustment-ratio: calc(660 / #{$default-screen-size});
+}
+:host(.dip-680) {
+  --screen-adjustment-ratio: calc(680 / #{$default-screen-size});
+}
+:host(.dip-700) {
+  --screen-adjustment-ratio: calc(700 / #{$default-screen-size});
+}
+:host(.dip-720) {
+  --screen-adjustment-ratio: calc(720 / #{$default-screen-size});
+}
+:host(.dip-740) {
+  --screen-adjustment-ratio: calc(740 / #{$default-screen-size});
+}
+:host(.dip-760) {
+  --screen-adjustment-ratio: calc(760 / #{$default-screen-size});
+}
+:host(.dip-780) {
+  --screen-adjustment-ratio: calc(780 / #{$default-screen-size});
+}
+:host(.dip-800) {
+  --screen-adjustment-ratio: calc(800 / #{$default-screen-size});
+}
+:host(.dip-820) {
+  --screen-adjustment-ratio: calc(820 / #{$default-screen-size});
+}
+:host(.dip-840) {
+  --screen-adjustment-ratio: calc(840 / #{$default-screen-size});
+}
+:host(.dip-860) {
+  --screen-adjustment-ratio: calc(860 / #{$default-screen-size});
+}
+:host(.dip-880) {
+  --screen-adjustment-ratio: calc(880 / #{$default-screen-size});
+}
+:host(.dip-900) {
+  --screen-adjustment-ratio: calc(900 / #{$default-screen-size});
+}
+:host(.dip-920) {
+  --screen-adjustment-ratio: calc(920 / #{$default-screen-size});
+}
+:host(.dip-940) {
+  --screen-adjustment-ratio: calc(940 / #{$default-screen-size});
+}
+:host(.dip-960) {
+  --screen-adjustment-ratio: calc(960 / #{$default-screen-size});
+}
+:host(.dip-980) {
+  --screen-adjustment-ratio: calc(980 / #{$default-screen-size});
+}
+:host(.dip-1000) {
+  --screen-adjustment-ratio: calc(1000 / #{$default-screen-size});
+}
+:host(.dip-1020) {
+  --screen-adjustment-ratio: calc(1020 / #{$default-screen-size});
+}
+:host(.dip-1040) {
+  --screen-adjustment-ratio: calc(1040 / #{$default-screen-size});
+}
+:host(.dip-1060) {
+  --screen-adjustment-ratio: calc(1060 / #{$default-screen-size});
+}
+:host(.dip-1080) {
+  --screen-adjustment-ratio: calc(1080 / #{$default-screen-size});
+}
+:host(.dip-1100) {
+  --screen-adjustment-ratio: calc(1100 / #{$default-screen-size});
+}
+:host(.dip-1120) {
+  --screen-adjustment-ratio: calc(1120 / #{$default-screen-size});
+}
+:host(.dip-1140) {
+  --screen-adjustment-ratio: calc(1140 / #{$default-screen-size});
+}
+:host(.dip-1160) {
+  --screen-adjustment-ratio: calc(1160 / #{$default-screen-size});
+}
+:host(.dip-1180) {
+  --screen-adjustment-ratio: calc(1180 / #{$default-screen-size});
+}
+:host(.dip-1200) {
+  --screen-adjustment-ratio: calc(1200 / #{$default-screen-size});
+}
+:host(.dip-1220) {
+  --screen-adjustment-ratio: calc(1220 / #{$default-screen-size});
+}
+:host(.dip-1240) {
+  --screen-adjustment-ratio: calc(1240 / #{$default-screen-size});
+}
+:host(.dip-1260) {
+  --screen-adjustment-ratio: calc(1260 / #{$default-screen-size});
+}
+:host(.dip-1280) {
+  --screen-adjustment-ratio: calc(1280 / #{$default-screen-size});
+}
+:host(.dip-1300) {
+  --screen-adjustment-ratio: calc(1300 / #{$default-screen-size});
+}
+:host(.dip-1320) {
+  --screen-adjustment-ratio: calc(1320 / #{$default-screen-size});
+}
+:host(.dip-1340) {
+  --screen-adjustment-ratio: calc(1340 / #{$default-screen-size});
+}
+:host(.dip-1360) {
+  --screen-adjustment-ratio: calc(1360 / #{$default-screen-size});
+}
+:host(.dip-1380) {
+  --screen-adjustment-ratio: calc(1380 / #{$default-screen-size});
+}
+:host(.dip-1400) {
+  --screen-adjustment-ratio: calc(1400 / #{$default-screen-size});
+}
+:host(.dip-1420) {
+  --screen-adjustment-ratio: calc(1420 / #{$default-screen-size});
+}
+:host(.dip-1440) {
+  --screen-adjustment-ratio: calc(1440 / #{$default-screen-size});
+}
+:host(.dip-1460) {
+  --screen-adjustment-ratio: calc(1460 / #{$default-screen-size});
+}
+:host(.dip-1480) {
+  --screen-adjustment-ratio: calc(1480 / #{$default-screen-size});
+}
+:host(.dip-1500) {
+  --screen-adjustment-ratio: calc(1500 / #{$default-screen-size});
+}
+:host(.dip-1520) {
+  --screen-adjustment-ratio: calc(1520 / #{$default-screen-size});
+}
+:host(.dip-1540) {
+  --screen-adjustment-ratio: calc(1540 / #{$default-screen-size});
+}
+:host(.dip-1560) {
+  --screen-adjustment-ratio: calc(1560 / #{$default-screen-size});
+}
+:host(.dip-1580) {
+  --screen-adjustment-ratio: calc(1580 / #{$default-screen-size});
+}
+:host(.dip-1600) {
+  --screen-adjustment-ratio: calc(1600 / #{$default-screen-size});
+}
+:host(.dip-1620) {
+  --screen-adjustment-ratio: calc(1620 / #{$default-screen-size});
+}
+:host(.dip-1640) {
+  --screen-adjustment-ratio: calc(1640 / #{$default-screen-size});
+}
+:host(.dip-1660) {
+  --screen-adjustment-ratio: calc(1660 / #{$default-screen-size});
+}
+:host(.dip-1680) {
+  --screen-adjustment-ratio: calc(1680 / #{$default-screen-size});
+}
+:host(.dip-1700) {
+  --screen-adjustment-ratio: calc(1700 / #{$default-screen-size});
+}
+:host(.dip-1720) {
+  --screen-adjustment-ratio: calc(1720 / #{$default-screen-size});
+}
+:host(.dip-1740) {
+  --screen-adjustment-ratio: calc(1740 / #{$default-screen-size});
+}
+:host(.dip-1760) {
+  --screen-adjustment-ratio: calc(1760 / #{$default-screen-size});
+}
+:host(.dip-1780) {
+  --screen-adjustment-ratio: calc(1780 / #{$default-screen-size});
+}
+:host(.dip-1800) {
+  --screen-adjustment-ratio: calc(1800 / #{$default-screen-size});
+}
+:host(.dip-1820) {
+  --screen-adjustment-ratio: calc(1820 / #{$default-screen-size});
+}
+:host(.dip-1840) {
+  --screen-adjustment-ratio: calc(1840 / #{$default-screen-size});
+}
+:host(.dip-1860) {
+  --screen-adjustment-ratio: calc(1860 / #{$default-screen-size});
+}
+:host(.dip-1880) {
+  --screen-adjustment-ratio: calc(1880 / #{$default-screen-size});
+}
+:host(.dip-1900) {
+  --screen-adjustment-ratio: calc(1900 / #{$default-screen-size});
+}
+:host(.dip-1920) {
+  --screen-adjustment-ratio: calc(1920 / #{$default-screen-size});
+}
+:host(.dip-1940) {
+  --screen-adjustment-ratio: calc(1940 / #{$default-screen-size});
+}
+:host(.dip-1960) {
+  --screen-adjustment-ratio: calc(1960 / #{$default-screen-size});
+}
+:host(.dip-1980) {
+  --screen-adjustment-ratio: calc(1980 / #{$default-screen-size});
+}
+:host(.dip-2000) {
+  --screen-adjustment-ratio: calc(2000 / #{$default-screen-size});
+}

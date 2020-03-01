@@ -18,6 +18,7 @@ function getInitialTimeWhenDataMissingEnds(): number {
 }
 
 const timeDelayInMillisBecauseOtherwiseChartBandComplainsAboutBeingTheSameAsNow: number = 60000;
+const minimumCssScreenResolution: number = 20;
 
 @Component({
   selector: 'nepa-home',
@@ -85,7 +86,9 @@ export class HomeComponent {
   }
 
   private addScreenCss(): void {
-    this.screenSizeClass = `dip-${Math.floor(screen.mainScreen.heightDIPs)}`;
+    const screenSizeRoundedToNearest5 =
+      Math.floor(screen.mainScreen.heightDIPs / minimumCssScreenResolution) * minimumCssScreenResolution;
+    this.screenSizeClass = `dip-${screenSizeRoundedToNearest5}`;
   }
 
   private initObservables(): void {
