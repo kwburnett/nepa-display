@@ -24,13 +24,17 @@ export class HomeComponent {
   public isPowerOff$: Observable<boolean>;
   public yAxisMinimum$: Observable<number>;
   public yAxisMaximum$: Observable<number>;
-  public xAxisMinimum$: Observable<Date>;
-  public xAxisMaximum$: Observable<Date>;
+  public xAxisMinimum$: Observable<Date> = of(new Date());
+  public xAxisMaximum$: Observable<Date> = of(new Date());
   public timeText$: Observable<string>;
   public interruptionsText$: Observable<string>;
   public canGetNewData$: Observable<boolean> = of(true);
 
   public isDataMissing$: Observable<boolean> = of(false);
+  private _shouldShowDataMissingBand$: BehaviorSubject<boolean> = new BehaviorSubject(false);
+  public shouldShowDataMissingBand$: Observable<boolean> = this._shouldShowDataMissingBand$
+    .asObservable()
+    .pipe(distinctUntilChanged());
   private _timeWhenDataStartedMissing$: BehaviorSubject<number> = new BehaviorSubject(
     initialTimeWhenDataStartedMissing,
   );
@@ -39,13 +43,12 @@ export class HomeComponent {
       (timeWhenDataStartedMissing: number): number =>
         timeWhenDataStartedMissing - timeDelayInMillisBecauseOtherwiseChartBandComplainsAboutBeingTheSameAsNow,
     ),
-    tap(val => console.log('Time when data started missing: ', val)),
     distinctUntilChanged(),
   );
   private _timeWhenDataMissingEnd$: BehaviorSubject<number> = new BehaviorSubject(initialTimeWhenDataMissingEnds);
   public timeOfMostRecentMeasurement$: Observable<number> = this._timeWhenDataMissingEnd$
     .asObservable()
-    .pipe(tap(val => console.log('Time when data missing ends:    ', val), distinctUntilChanged()));
+    .pipe(distinctUntilChanged());
 
   private _subscriptions: Subscription[] = [];
   private _changeTracker$: Observable<[IPowerData[], IRecentSwitch]>;
@@ -91,31 +94,27 @@ export class HomeComponent {
       distinctUntilChanged(),
     );
     this._subscriptions.push(
-      this.isDataMissing$
-        .pipe(withLatestFrom(this.powerData$))
-        .subscribe(([isDataMissing, powerData]: [boolean, IPowerData[]]): void => {
+      this.powerData$
+        .pipe(withLatestFrom(this.isDataMissing$))
+        .subscribe(([powerData, isDataMissing]: [IPowerData[], boolean]): void => {
           if (isDataMissing) {
             const mostRecentTime = powerData[powerData.length - 1].time;
+            const timeWhenDataStartedMissing = powerData.find((powerDataPoint: IPowerData): boolean =>
+              isNullOrUndefined(powerDataPoint.voltage),
+            ).time;
+            this._timeWhenDataStartedMissing$.next(timeWhenDataStartedMissing);
+            this._timeWhenDataMissingEnd$.next(mostRecentTime);
             if (
-              mostRecentTime - this._timeWhenDataStartedMissing$.getValue() >=
-              timeDelayInMillisBecauseOtherwiseChartBandComplainsAboutBeingTheSameAsNow
+              timeWhenDataStartedMissing + timeDelayInMillisBecauseOtherwiseChartBandComplainsAboutBeingTheSameAsNow <
+              mostRecentTime
             ) {
+              this._shouldShowDataMissingBand$.next(true);
+              this._timeWhenDataStartedMissing$.next(timeWhenDataStartedMissing);
               this._timeWhenDataMissingEnd$.next(mostRecentTime);
             }
           } else {
+            this._shouldShowDataMissingBand$.next(false);
             this._timeWhenDataMissingEnd$.next(initialTimeWhenDataMissingEnds);
-          }
-        }),
-    );
-    this._subscriptions.push(
-      this.isDataMissing$
-        .pipe(withLatestFrom(this.powerData$))
-        .subscribe(([isDataMissing, powerData]: [boolean, IPowerData[]]): void => {
-          if (isDataMissing) {
-            this._timeWhenDataStartedMissing$.next(
-              powerData.find((powerDataPoint: IPowerData): boolean => isNullOrUndefined(powerDataPoint.voltage)).time,
-            );
-          } else {
             this._timeWhenDataStartedMissing$.next(initialTimeWhenDataStartedMissing);
           }
         }),

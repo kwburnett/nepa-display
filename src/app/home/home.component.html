@@ -60,7 +60,7 @@
     <ChartPlotBandAnnotation
       tkCartesianAnnotations
       axisId="timeAxis"
-      [hidden]="(isDataMissing$ | async) ? 'false' : 'true'"
+      hidden="{{ (shouldShowDataMissingBand$ | async) ? 'false' : 'true' }}"
       zPosition="BelowSeries"
       [maxValue]="timeOfMostRecentMeasurement$ | async"
       [minValue]="timeWhenDataStartedMissing$ | async"
