@@ -1,19 +1,7 @@
 import { Component, HostListener } from '@angular/core';
 import { TrackballCustomContentData } from 'nativescript-ui-chart';
-import {
-  BehaviorSubject,
-  combineLatest,
-  Observable,
-  of,
-  Subscription
-} from 'rxjs';
-import {
-  distinctUntilChanged,
-  filter,
-  map,
-  switchMap,
-  withLatestFrom
-} from 'rxjs/operators';
+import { BehaviorSubject, combineLatest, Observable, of, Subscription } from 'rxjs';
+import { distinctUntilChanged, map, switchMap, tap, withLatestFrom } from 'rxjs/operators';
 import { isAndroid, Page } from 'tns-core-modules/ui/page/page';
 import { IPowerData } from '../../model/i-power-data';
 import { IRecentSwitch } from '../../model/i-recent-switch';
@@ -21,15 +9,14 @@ import { LifeCycleHooks } from '../life-cycle-hooks';
 import { isNullOrUndefined, isPowerOff, isPowerOn } from '../utils';
 import { PowerService } from './power.service';
 
-const initialTimeWhenDataStartedMissing: number = new Date().setHours(
-  new Date().getHours() - 1
-);
-const timeDelayInMillisBecauseOtherwiseChartBandComplainsAboutBeingTheSameAsNow: number = 50000;
+const initialTimeWhenDataStartedMissing: number = new Date().setHours(new Date().getHours() - 1);
+const initialTimeWhenDataMissingEnds: number = new Date().setDate(new Date().getDate() + 1);
+const timeDelayInMillisBecauseOtherwiseChartBandComplainsAboutBeingTheSameAsNow: number = 60000;
 
 @Component({
   selector: 'nepa-home',
   templateUrl: './home.component.html',
-  styleUrls: ['./home.component.scss']
+  styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent {
   public powerData$: Observable<IPowerData[]>;
@@ -37,29 +24,28 @@ export class HomeComponent {
   public isPowerOff$: Observable<boolean>;
   public yAxisMinimum$: Observable<number>;
   public yAxisMaximum$: Observable<number>;
-  public xAxisMinimum$: Observable<Date> = of(new Date());
-  public xAxisMaximum$: Observable<Date> = of(new Date());
+  public xAxisMinimum$: Observable<Date>;
+  public xAxisMaximum$: Observable<Date>;
   public timeText$: Observable<string>;
   public interruptionsText$: Observable<string>;
+  public canGetNewData$: Observable<boolean> = of(true);
 
   public isDataMissing$: Observable<boolean> = of(false);
-  private _timeWhenDataStartedMissing$: BehaviorSubject<
-    number
-  > = new BehaviorSubject(initialTimeWhenDataStartedMissing);
-  public timeWhenDataStartedMissing$: Observable<
-    number
-  > = this._timeWhenDataStartedMissing$
-    .asObservable()
-    .pipe(
-      map(
-        (timeWhenDataStartedMissing: number): number =>
-          timeWhenDataStartedMissing -
-          timeDelayInMillisBecauseOtherwiseChartBandComplainsAboutBeingTheSameAsNow
-      )
-    );
-  public timeOfMostRecentMeasurement$: Observable<number> = of(
-    new Date().setDate(new Date().getDate() + 1)
+  private _timeWhenDataStartedMissing$: BehaviorSubject<number> = new BehaviorSubject(
+    initialTimeWhenDataStartedMissing,
   );
+  public timeWhenDataStartedMissing$: Observable<number> = this._timeWhenDataStartedMissing$.asObservable().pipe(
+    map(
+      (timeWhenDataStartedMissing: number): number =>
+        timeWhenDataStartedMissing - timeDelayInMillisBecauseOtherwiseChartBandComplainsAboutBeingTheSameAsNow,
+    ),
+    tap(val => console.log('Time when data started missing: ', val)),
+    distinctUntilChanged(),
+  );
+  private _timeWhenDataMissingEnd$: BehaviorSubject<number> = new BehaviorSubject(initialTimeWhenDataMissingEnds);
+  public timeOfMostRecentMeasurement$: Observable<number> = this._timeWhenDataMissingEnd$
+    .asObservable()
+    .pipe(tap(val => console.log('Time when data missing ends:    ', val), distinctUntilChanged()));
 
   private _subscriptions: Subscription[] = [];
   private _changeTracker$: Observable<[IPowerData[], IRecentSwitch]>;
@@ -94,75 +80,66 @@ export class HomeComponent {
     this.powerData$
       .subscribe((powerData: IPowerData[]): void => {
         this._subscriptions.push(
-          this._powerService
-            .getPowerSwitches(powerData[0].time)
-            .subscribe((powerSwitchData: IPowerData[]): void => {
-              this._powerSwitches = powerSwitchData;
-            })
+          this._powerService.getPowerSwitches(powerData[0].time).subscribe((powerSwitchData: IPowerData[]): void => {
+            this._powerSwitches = powerSwitchData;
+          }),
         );
       })
       .unsubscribe();
     this.isDataMissing$ = this.powerData$.pipe(
-      map((powerData: IPowerData[]): boolean =>
-        isNullOrUndefined(powerData[powerData.length - 1].voltage)
-      ),
-      distinctUntilChanged()
-    );
-    this.timeOfMostRecentMeasurement$ = this.powerData$.pipe(
-      map(
-        (powerData: IPowerData[]): number =>
-          powerData[powerData.length - 1].time
-      )
+      map((powerData: IPowerData[]): boolean => isNullOrUndefined(powerData[powerData.length - 1].voltage)),
+      distinctUntilChanged(),
     );
     this._subscriptions.push(
       this.isDataMissing$
-        .pipe(
-          filter((isDataMissing: boolean): boolean => isDataMissing),
-          withLatestFrom(this.powerData$)
-        )
-        .subscribe(
-          ([isDataMissing, powerData]: [boolean, IPowerData[]]): void => {
-            this._timeWhenDataStartedMissing$.next(
-              powerData.find((powerDataPoint: IPowerData): boolean =>
-                isNullOrUndefined(powerDataPoint.voltage)
-              ).time
-            );
+        .pipe(withLatestFrom(this.powerData$))
+        .subscribe(([isDataMissing, powerData]: [boolean, IPowerData[]]): void => {
+          if (isDataMissing) {
+            const mostRecentTime = powerData[powerData.length - 1].time;
+            if (
+              mostRecentTime - this._timeWhenDataStartedMissing$.getValue() >=
+              timeDelayInMillisBecauseOtherwiseChartBandComplainsAboutBeingTheSameAsNow
+            ) {
+              this._timeWhenDataMissingEnd$.next(mostRecentTime);
+            }
+          } else {
+            this._timeWhenDataMissingEnd$.next(initialTimeWhenDataMissingEnds);
           }
-        )
+        }),
+    );
+    this._subscriptions.push(
+      this.isDataMissing$
+        .pipe(withLatestFrom(this.powerData$))
+        .subscribe(([isDataMissing, powerData]: [boolean, IPowerData[]]): void => {
+          if (isDataMissing) {
+            this._timeWhenDataStartedMissing$.next(
+              powerData.find((powerDataPoint: IPowerData): boolean => isNullOrUndefined(powerDataPoint.voltage)).time,
+            );
+          } else {
+            this._timeWhenDataStartedMissing$.next(initialTimeWhenDataStartedMissing);
+          }
+        }),
     );
     this.isPowerOn$ = this.powerData$.pipe(
-      map((powerData: IPowerData[]): boolean =>
-        isPowerOn(powerData[powerData.length - 1])
-      )
+      map((powerData: IPowerData[]): boolean => isPowerOn(powerData[powerData.length - 1])),
     );
     this.isPowerOff$ = this.powerData$.pipe(
-      map((powerData: IPowerData[]): boolean =>
-        isPowerOff(powerData[powerData.length - 1])
-      )
+      map((powerData: IPowerData[]): boolean => isPowerOff(powerData[powerData.length - 1])),
     );
     this.yAxisMaximum$ = this.powerData$.pipe(
       map((powerData: IPowerData[]): number => {
         return Math.round(
-          Math.max(
-            ...powerData.map(
-              (powerDataPoint: IPowerData): number => powerDataPoint.voltage
-            )
-          ) + 10
+          Math.max(...powerData.map((powerDataPoint: IPowerData): number => powerDataPoint.voltage)) + 10,
         );
-      })
+      }),
     );
     this.yAxisMinimum$ = this.powerData$.pipe(
       map((powerData: IPowerData[]): number => {
         return Math.round(
-          Math.min(
-            ...powerData
-              .filter(isPowerOn)
-              .map(
-                (powerDataPoint: IPowerData): number => powerDataPoint.voltage
-              )
-          ) - 10
+          Math.min(...powerData.filter(isPowerOn).map((powerDataPoint: IPowerData): number => powerDataPoint.voltage)) -
+            10,
         );
-      })
+      }),
     );
     this.xAxisMaximum$ = this.powerData$.pipe(
       map(
@@ -181,12 +158,12 @@ export class HomeComponent {
             maxTime.getMonth(),
             maxTime.getDate(),
             hoursToUse,
-            minutesToUse
+            minutesToUse,
           );
           // console.log(timeToUse);
           return timeToUse;
-        }
-      )
+        },
+      ),
     );
     this.xAxisMinimum$ = this.xAxisMaximum$.pipe(
       map(
@@ -195,8 +172,8 @@ export class HomeComponent {
           minTime.setHours(minTime.getHours() - 4);
           // console.log(minTime);
           return minTime;
-        }
-      )
+        },
+      ),
     );
     this._changeTracker$ = combineLatest(
       this.powerData$,
@@ -206,82 +183,56 @@ export class HomeComponent {
             return isPowerCurrentlyOn
               ? this._powerService.getMostRecentPowerRestoration()
               : this._powerService.getMostRecentPowerOutage();
-          }
-        )
-      )
+          },
+        ),
+      ),
     );
     this.timeText$ = this._changeTracker$.pipe(
       withLatestFrom(this.isDataMissing$),
-      map(
-        ([[powerData, mostRecentChange], isDataMissing]: [
-          [IPowerData[], IRecentSwitch],
-          boolean
-        ]): string => {
-          if (isDataMissing) {
-            return this.getTimeIntervalDisplay(
-              this._timeWhenDataStartedMissing$.getValue(),
-              powerData[powerData.length - 1].time
-            );
-          }
+      map(([[powerData, mostRecentChange], isDataMissing]: [[IPowerData[], IRecentSwitch], boolean]): string => {
+        if (isDataMissing) {
           return this.getTimeIntervalDisplay(
-            mostRecentChange.powerChange.time,
-            powerData[powerData.length - 1].time
+            this._timeWhenDataStartedMissing$.getValue(),
+            powerData[powerData.length - 1].time,
           );
         }
-      )
+        return this.getTimeIntervalDisplay(mostRecentChange.powerChange.time, powerData[powerData.length - 1].time);
+      }),
     );
     this.interruptionsText$ = this._changeTracker$.pipe(
-      map(
-        ([powerData, mostRecentChange]: [
-          IPowerData[],
-          IRecentSwitch
-        ]): string => {
-          return `with ${
-            mostRecentChange.numberOfInterruptions > 0
-              ? mostRecentChange.numberOfInterruptions
-              : 'no'
-          } interruption${
-            mostRecentChange.numberOfInterruptions !== 1 ? 's' : ''
-          }`;
-        }
-      )
+      map(([powerData, mostRecentChange]: [IPowerData[], IRecentSwitch]): string => {
+        return `with ${
+          mostRecentChange.numberOfInterruptions > 0 ? mostRecentChange.numberOfInterruptions : 'no'
+        } interruption${mostRecentChange.numberOfInterruptions !== 1 ? 's' : ''}`;
+      }),
     );
     this._powerService.initiateDataCheck();
   }
 
   public onTrackBallContentRequested(event: TrackballCustomContentData): void {
     const selectedDataPoint = <IPowerData>event.pointData;
-    event.content = `Power ${
-      isPowerOff(selectedDataPoint) ? 'out' : 'on'
-    } from:\r\n`;
+    event.content = `Power ${isPowerOff(selectedDataPoint) ? 'out' : 'on'} from:\r\n`;
     if (this._powerSwitches.length === 0) {
       event.content += 'No data found';
     } else {
       const indexOfChangePastSelectedDataPoint = this._powerSwitches.findIndex(
-        (powerSwitch: IPowerData): boolean =>
-          powerSwitch.time >= selectedDataPoint.time
+        (powerSwitch: IPowerData): boolean => powerSwitch.time >= selectedDataPoint.time,
       );
       let timeEnd = this._powerSwitches[this._powerSwitches.length - 1].time,
         timeStart = -1;
       if (indexOfChangePastSelectedDataPoint > -1) {
-        timeEnd = this._powerSwitches[indexOfChangePastSelectedDataPoint - 1]
-          .time;
-        timeStart = this._powerSwitches[indexOfChangePastSelectedDataPoint]
-          .time;
+        timeEnd = this._powerSwitches[indexOfChangePastSelectedDataPoint - 1].time;
+        timeStart = this._powerSwitches[indexOfChangePastSelectedDataPoint].time;
       }
-      event.content += `${this.formatTime(timeEnd)} - ${
-        timeStart > -1 ? this.formatTime(timeStart) : 'now'
-      }`;
+      event.content += `${this.formatTime(timeEnd)} - ${timeStart > -1 ? this.formatTime(timeStart) : 'now'}`;
     }
   }
 
   private formatTime(timeToFormat: number): string {
     const dateToUse = new Date(timeToFormat);
-    return `${
-      dateToUse.getHours() > 12
-        ? dateToUse.getHours() - 12
-        : dateToUse.getHours()
-    }:${dateToUse.getMinutes() < 10 ? '0' : ''}${dateToUse.getMinutes()}`;
+    return `${dateToUse.getHours() > 12 ? dateToUse.getHours() - 12 : dateToUse.getHours()}:${
+      dateToUse.getMinutes() < 10 ? '0' : ''
+    }${dateToUse.getMinutes()}`;
   }
 
   private getTimeIntervalDisplay(timeStart: number, timeEnd: number): string {
@@ -303,12 +254,8 @@ export class HomeComponent {
       return `${hourValue} hr${biHourValue !== 2 ? 's' : ''}`;
     } else {
       const dayValue = Math.floor(timeDifferenceInMinutes / 1440);
-      const hourValue = Math.floor(
-        (timeDifferenceInMinutes - dayValue * 1440) / 60
-      );
-      return `${dayValue} day${dayValue > 1 ? 's' : ''} ${hourValue} hr${
-        hourValue > 1 ? 's' : ''
-      }`;
+      const hourValue = Math.floor((timeDifferenceInMinutes - dayValue * 1440) / 60);
+      return `${dayValue} day${dayValue > 1 ? 's' : ''} ${hourValue} hr${hourValue > 1 ? 's' : ''}`;
     }
   }
 }
