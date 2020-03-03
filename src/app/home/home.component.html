@@ -7,7 +7,7 @@
   id="homeScreen"
 >
   <ShadowedLabel
-    text="{{ (canGetNewData$ | async) ? ((isDataMissing$ | async) ? '&#xf071;' : '&#xf011;') : '&#xf059;' }}"
+    [text]="appIcon"
     class="fas power-indicator"
   ></ShadowedLabel>
 

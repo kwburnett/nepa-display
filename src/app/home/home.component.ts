@@ -19,6 +19,11 @@ function getInitialTimeWhenDataMissingEnds(): number {
 
 const timeDelayInMillisBecauseOtherwiseChartBandComplainsAboutBeingTheSameAsNow: number = 60000;
 const minimumCssScreenResolution: number = 20;
+enum PowerIcon {
+  warning = 'f071',
+  question = 'f059',
+  power = 'f011',
+}
 
 @Component({
   selector: 'nepa-home',
@@ -36,6 +41,7 @@ export class HomeComponent {
   public timeText$: Observable<string>;
   public interruptionsText$: Observable<string>;
   public canGetNewData$: Observable<boolean> = of(true);
+  public appIcon: string;
 
   @HostBinding('class') public screenSizeClass: string = '';
 
@@ -214,6 +220,21 @@ export class HomeComponent {
         } interruption${mostRecentChange.numberOfInterruptions !== 1 ? 's' : ''}`;
       }),
     );
+    this._subscriptions.push(
+      combineLatest(this.isDataMissing$, this.canGetNewData$).subscribe(
+        ([isDataMissing, canGetNewData]: [boolean, boolean]): void => {
+          let iconToUse: PowerIcon = PowerIcon.question;
+          if (canGetNewData) {
+            if (isDataMissing) {
+              iconToUse = PowerIcon.warning;
+            } else {
+              iconToUse = PowerIcon.power;
+            }
+          }
+          this._updateAppIcon(iconToUse);
+        },
+      ),
+    );
     this._powerService.initiateDataCheck();
   }
 
@@ -271,5 +292,9 @@ export class HomeComponent {
     this._shouldShowDataMissingBand$.next(false);
     this._timeWhenDataMissingEnd$.next(getInitialTimeWhenDataMissingEnds());
     this._timeWhenDataStartedMissing$.next(getInitialTimeWhenDataStartedMissing());
+  }
+
+  private _updateAppIcon(iconToDisplay: string) {
+    this.appIcon = String.fromCharCode(parseInt(iconToDisplay, 16));
   }
 }
