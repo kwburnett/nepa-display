@@ -1,4 +1,4 @@
 export interface IPowerData {
-  voltage: number;
+  voltage?: number;
   time: number;
 }
