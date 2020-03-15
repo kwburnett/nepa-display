@@ -80,8 +80,8 @@ export class HomeComponent {
 
   @HostListener('loaded')
   public pageOnInit() {
-    this.initObservables();
-    this.addScreenCss();
+    this._initObservables();
+    this._addScreenCss();
   }
   @HostListener('unloaded')
   public pageDestroy() {
@@ -91,13 +91,13 @@ export class HomeComponent {
     this._resetNoDataIntervals();
   }
 
-  private addScreenCss(): void {
+  private _addScreenCss(): void {
     const screenSizeRoundedToNearest5 =
       Math.floor(screen.mainScreen.heightDIPs / minimumCssScreenResolution) * minimumCssScreenResolution;
     this.screenSizeClass = `dip-${screenSizeRoundedToNearest5}`;
   }
 
-  private initObservables(): void {
+  private _initObservables(): void {
     this.powerData$ = this._powerService.getPowerData();
     this.powerData$
       .subscribe((powerData: IPowerData[]): void => {
