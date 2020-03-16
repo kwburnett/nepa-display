@@ -1,87 +1,69 @@
 <FlexBoxLayout
-  [ngClass]="{
-    'power-on': isPowerOn$ | async,
-    'power-off': !(isPowerOn$ | async),
-    'power-unknown': isDataMissing$ | async
-  }"
-  id="homeScreen"
+	[ngClass]="{
+		'power-on': isPowerOn$ | async,
+		'power-off': isPowerOff$ | async,
+		'power-unknown': isDataMissing$ | async
+	}"
+	id="homeScreen"
 >
-  <ShadowedLabel
-    [text]="appIcon"
-    class="fas power-indicator"
-  ></ShadowedLabel>
+	<ShadowedLabel [text]="appIcon" class="fas power-indicator"></ShadowedLabel>
 
-  <Label
-    class="title title-on"
-    [text]="
-      ((isDataMissing$ | async)
-        ? 'NO DATA'
-        : 'NEPA ' + ((isPowerOn$ | async) ? 'ON' : 'OFF')) + ' FOR'
-    "
-  ></Label>
-  <Label class="data" [text]="timeText$ | async"></Label>
-  <Label
-		class="interruptions"
-    [text]="(isDataMissing$ | async) ? '' : interruptionsText$ | async"
-  ></Label>
-  <RadCartesianChart>
-    <RadCartesianChartGrid
-      tkCartesianGrid
-      horizontalLinesVisible="true"
-      horizontalStrokeColor="#635D6D"
-      horizontalStrokeWidth="2"
-    >
-    </RadCartesianChartGrid>
-    <DateTimeContinuousAxis
-      tkCartesianHorizontalAxis
-      majorStep="30"
-      majorStepUnit="Minute"
-      [maximum]="xAxisMaximum$ | async"
-      [minimum]="xAxisMinimum$ | async"
-      dateFormat="h:mm"
-      labelFitMode="Rotate"
-      labelRotationAngle="-.8"
-      plotMode="OnTicks"
-      id="timeAxis"
-    ></DateTimeContinuousAxis>
-    <LinearAxis
-      tkCartesianVerticalAxis
-      maximum="300"
-      labelFormat="%.0f V"
-    ></LinearAxis>
-    <Palette tkCartesianPalette>
-      <PaletteEntry
-        tkCartesianPaletteEntry
-        fillColor="#85635D6D"
-        strokeColor="#ffffff"
-      ></PaletteEntry>
-    </Palette>
+	<Label
+		class="title title-on"
+		[text]="((isDataMissing$ | async) ? 'NO DATA' : 'NEPA ' + ((isPowerOn$ | async) ? 'ON' : 'OFF')) + ' FOR'"
+	></Label>
+	<Label class="data" [text]="timeText$ | async"></Label>
+	<Label class="interruptions" [text]="(isDataMissing$ | async) ? '' : (interruptionsText$ | async)"></Label>
+	<RadCartesianChart>
+		<RadCartesianChartGrid
+			tkCartesianGrid
+			horizontalLinesVisible="true"
+			horizontalStrokeColor="#635D6D"
+			horizontalStrokeWidth="2"
+		>
+		</RadCartesianChartGrid>
+		<DateTimeContinuousAxis
+			tkCartesianHorizontalAxis
+			majorStep="30"
+			majorStepUnit="Minute"
+			[maximum]="xAxisMaximum$ | async"
+			[minimum]="xAxisMinimum$ | async"
+			dateFormat="h:mm"
+			labelFitMode="Rotate"
+			labelRotationAngle="-.8"
+			plotMode="OnTicks"
+			id="timeAxis"
+		></DateTimeContinuousAxis>
+		<LinearAxis tkCartesianVerticalAxis maximum="300" labelFormat="%.0f V"></LinearAxis>
+		<Palette tkCartesianPalette>
+			<PaletteEntry tkCartesianPaletteEntry fillColor="#85635D6D" strokeColor="#ffffff"></PaletteEntry>
+		</Palette>
 
-    <ChartPlotBandAnnotation
-      tkCartesianAnnotations
-      axisId="timeAxis"
-      hidden="{{ (shouldShowDataMissingBand$ | async) ? 'false' : 'true' }}"
-      zPosition="BelowSeries"
-      [maxValue]="timeOfMostRecentMeasurement$ | async"
-      [minValue]="timeWhenDataStartedMissing$ | async"
-      fillColor="#cacc3f"
-      strokeColor="#cacc3f"
-    >
-    </ChartPlotBandAnnotation>
+		<ChartPlotBandAnnotation
+			tkCartesianAnnotations
+			axisId="timeAxis"
+			hidden="{{ (shouldShowDataMissingBand$ | async) ? 'false' : 'true' }}"
+			zPosition="BelowSeries"
+			[maxValue]="timeOfMostRecentMeasurement$ | async"
+			[minValue]="timeWhenDataStartedMissing$ | async"
+			fillColor="#cacc3f"
+			strokeColor="#cacc3f"
+		>
+		</ChartPlotBandAnnotation>
 
-    <Trackball
-      tkCartesianTrackball
-      snapMode="AllClosestPoints"
-      showIntersectionPoints="false"
-      (trackBallContentRequested)="onTrackBallContentRequested($event)"
-    >
-    </Trackball>
+		<Trackball
+			tkCartesianTrackball
+			snapMode="AllClosestPoints"
+			showIntersectionPoints="false"
+			(trackBallContentRequested)="onTrackBallContentRequested($event)"
+		>
+		</Trackball>
 
-    <AreaSeries
-      tkCartesianSeries
-      [items]="powerData$ | async"
-      categoryProperty="time"
-      valueProperty="voltage"
-    ></AreaSeries>
-  </RadCartesianChart>
+		<AreaSeries
+			tkCartesianSeries
+			[items]="powerData$ | async"
+			categoryProperty="time"
+			valueProperty="voltage"
+		></AreaSeries>
+	</RadCartesianChart>
 </FlexBoxLayout>
