@@ -5,7 +5,7 @@ export function isPowerOn(powerData: IPowerData): boolean {
 }
 
 export function isPowerOff(powerData: IPowerData): boolean {
-  return !isPowerOn(powerData);
+  return powerData.voltage === 0;
 }
 
 export function isNullOrUndefined(object: any): boolean {

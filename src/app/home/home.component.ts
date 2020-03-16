@@ -245,7 +245,11 @@ export class HomeComponent {
 	}
 
 	public onTrackBallContentRequested(event: TrackballCustomContentData): void {
-		const selectedDataPoint = <IPowerData>event.pointData;
+    const selectedDataPoint = <IPowerData>event.pointData;
+    if (!isPowerOff(selectedDataPoint) && !isPowerOn(selectedDataPoint)) {
+      event.content = 'Power unknown';
+      return;
+    }
 		event.content = `Power ${isPowerOff(selectedDataPoint) ? 'out' : 'on'} from:\r\n`;
 		if (this._powerSwitches.length === 0) {
 			event.content += 'No data found';

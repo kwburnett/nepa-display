@@ -22,10 +22,10 @@ describe('utils', () => {
 		});
 	});
 	describe('isPowerOff', () => {
-		it('should return false if 0 or no data', () => {
+		it('should return false if 0', () => {
 			expect(isPowerOff(voltageOn)).toBe(false);
 			expect(isPowerOff(voltageOff)).toBe(true);
-			expect(isPowerOff(voltageNoData)).toBe(true);
+			expect(isPowerOff(voltageNoData)).toBe(false);
 		});
 	});
 	describe('isNullOrUndefined', () => {
